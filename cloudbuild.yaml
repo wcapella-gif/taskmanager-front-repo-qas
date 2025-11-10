@@ -1,0 +1,40 @@
+substitutions:
+  _REGION: us-east1
+  _PROJECT: poccv-taskmanagertienda-qas
+  _SERVICE: taskmanager-front-qas
+  _REPO: taskmanager-front-repo
+  _SQL_INSTANCE: taskmanager-sql-db
+  _VPC_CONNECTOR: serverless-connector-qas
+  _SA_EMAIL: sa-cloudrun-app@poccv-taskmanagertienda-qas.iam.gserviceaccount.com
+
+steps:
+# 1️⃣ Construir imagen Docker
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    ['build', '-t', '${_REGION}-docker.pkg.dev/${_PROJECT}/${_REPO}/${_SERVICE}:$SHORT_SHA', '.']
+
+# 2️⃣ Subir a Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    ['push', '${_REGION}-docker.pkg.dev/${_PROJECT}/${_REPO}/${_SERVICE}:$SHORT_SHA']
+
+# 3️⃣ Desplegar a Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      gcloud run deploy ${_SERVICE} \
+        --image=${_REGION}-docker.pkg.dev/${_PROJECT}/${_REPO}/${_SERVICE}:$SHORT_SHA \
+        --region=${_REGION} \
+        --platform=managed \
+        --service-account=${_SA_EMAIL} \
+        --cpu=1 \
+        --memory=512Mi \
+        --vpc-connector=${_VPC_CONNECTOR} \
+        --add-cloudsql-instances=${_PROJECT}:${_REGION}:${_SQL_INSTANCE} \
+        --set-env-vars=CLOUD_SQL_CONNECTION_NAME=${_PROJECT}:${_REGION}:${_SQL_INSTANCE} \
+        --allow-unauthenticated
+
+images:
+- '${_REGION}-docker.pkg.dev/${_PROJECT}/${_REPO}/${_SERVICE}:$SHORT_SHA'
