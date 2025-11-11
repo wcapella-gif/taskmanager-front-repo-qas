@@ -5,7 +5,7 @@ substitutions:
   _REPO: taskmanager-front-repo
   _SQL_INSTANCE: taskmanager-sql-db
   _VPC_CONNECTOR: serverless-connector-qas
-  _SA_EMAIL: sa-cloudrun-app@poccv-taskmanagertienda-qas.iam.gserviceaccount.com
+  _SA_EMAIL: sa-cloudrun-taskmanager@poccv-taskmanagertienda-qas.iam.gserviceaccount.com
 
 steps:
 # 1️⃣ Construir imagen Docker
